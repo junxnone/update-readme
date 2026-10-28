@@ -67,5 +67,10 @@ runs:
       git pull ${REMOTE}
       git add sitemap.md sitehist.md kg.json
       git status
-      git commit -am "Update Index"
-      git push ${REMOTE}  ${{ inputs.branch }}
+      # 忽略时间戳行，若无实质变更则不提交/不推送
+      if git diff --cached -U0 | grep -E '^[+-]' | grep -vE '^(\+\+\+|---)' | grep -vE '^[+-]> `@' | grep -q .; then
+        git commit -m "Update Index"
+        git push ${REMOTE} ${{ inputs.branch }}
+      else
+        echo "No content changes (timestamp only), skip push"
+      fi
