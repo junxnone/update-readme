@@ -48,7 +48,8 @@ runs:
       cat aiwiki_hist.md |grep -v 'Wiki History'|sed 's/\](\//\](aiwiki\//g'|tee -a tmp.md
       cat opt_hist.md |grep -v 'Wiki History'|sed 's/\](\//\](opt\//g'|tee -a tmp.md
       
-      cat tmp.md |sort -r | tee sitehist.md
+      # LC_ALL=C: byte order, so the sort never depends on the runner locale
+      cat tmp.md | LC_ALL=C sort -r | tee sitehist.md
       date  -d "+8 hour" "+> \`@%Y.%m.%d %H:%M:%S\`" | tee -a sitehist.md
 
       wget https://raw.githubusercontent.com/junxnone/linux/main/docs/kg.json -O linux_kg.json
