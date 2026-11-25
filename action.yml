@@ -43,13 +43,30 @@ runs:
       wget https://raw.githubusercontent.com/junxnone/xwiki/main/docs/hist.md -O xwiki_hist.md
       wget https://raw.githubusercontent.com/junxnone/aiwiki/main/docs/hist.md -O aiwiki_hist.md
       wget https://raw.githubusercontent.com/junxnone/opt/main/docs/hist.md -O opt_hist.md
-      cat linux_hist.md |grep -v 'Wiki History'|sed 's/\](\//\](linux\//g'|tee tmp.md
-      cat xwiki_hist.md |grep -v 'Wiki History'|sed 's/\](\//\](xwiki\//g'|tee -a tmp.md
-      cat aiwiki_hist.md |grep -v 'Wiki History'|sed 's/\](\//\](aiwiki\//g'|tee -a tmp.md
-      cat opt_hist.md |grep -v 'Wiki History'|sed 's/\](\//\](opt\//g'|tee -a tmp.md
-      
+      # each hist.md has a Created and an Updated tab: merge them per tab instead of
+      # concatenating whole files (which scrambled the tab markers into the list)
+      : > created.tmp
+      : > updated.tmp
+      for r in linux xwiki aiwiki opt; do
+        sed "s#\](/#](${r}/#g" ${r}_hist.md | awk '
+          /^#### \*\*Created\*\*/ {s="c"; next}
+          /^#### \*\*Updated\*\*/ {s="u"; next}
+          /^- / {if (s=="c") print >> "created.tmp"; else if (s=="u") print >> "updated.tmp"}'
+      done
       # LC_ALL=C: byte order, so the sort never depends on the runner locale
-      cat tmp.md | LC_ALL=C sort -r | tee sitehist.md
+      {
+        echo '<!-- tabs:start -->'
+        echo
+        echo '#### **Created**'
+        echo
+        LC_ALL=C sort -r created.tmp
+        echo
+        echo '#### **Updated**'
+        echo
+        LC_ALL=C sort -r updated.tmp
+        echo
+        echo '<!-- tabs:end -->'
+      } | tee sitehist.md
       date  -d "+8 hour" "+> \`@%Y.%m.%d %H:%M:%S\`" | tee -a sitehist.md
 
       wget https://raw.githubusercontent.com/junxnone/linux/main/docs/kg.json -O linux_kg.json
